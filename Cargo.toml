@@ -1,0 +1,8 @@
+[package]
+name = "ips-patch"
+version = "0.0.0"
+authors = ["Craig M. Brandenburg <c.m.brandenburg@gmail.com>"]
+
+[dependencies]
+docopt = "0.6"
+rustc-serialize = "0.3"
