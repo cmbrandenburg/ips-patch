@@ -3,9 +3,7 @@ use std;
 #[derive(Debug)]
 pub enum Error {
     #[doc(hidden)]
-    InvalidPatch {
-        description: String,
-    },
+    InvalidPatch { description: String },
 
     #[doc(hidden)]
     Io {
@@ -37,9 +35,10 @@ impl std::fmt::Display for Error {
         };
         match *self {
             Error::InvalidPatch { ref description } => write!(f, "{}: {}", d, description),
-            Error::Io { ref cause, ref description } => {
-                write!(f, "{}: {}: {}", d, description, cause)
-            }
+            Error::Io {
+                ref cause,
+                ref description,
+            } => write!(f, "{}: {}: {}", d, description, cause),
         }
     }
 }

@@ -5,10 +5,7 @@ use error::Error;
 
 #[derive(Debug)]
 enum Record {
-    Normal {
-        offset: usize,
-        data: Vec<u8>,
-    },
+    Normal { offset: usize, data: Vec<u8> },
     RuntimeLengthEncoded {
         offset: usize,
         size: usize,
@@ -27,19 +24,21 @@ impl Patch {
         let buf = {
 
             let mut f = try!(std::fs::File::open(patch_filename).map_err(|e| {
-                Error::Io {
+                                                                             Error::Io {
                     cause: e,
                     description: format!("Failed to open patch file '{}'", patch_filename),
                 }
-            }));
+                                                                         }));
 
             let mut buf = Vec::new();
-            try!(f.read_to_end(&mut buf).map_err(|e| {
-                Error::Io {
-                    cause: e,
-                    description: format!("Failed to read patch file '{}'", patch_filename),
-                }
-            }));
+            try!(f.read_to_end(&mut buf)
+                     .map_err(|e| {
+                                  Error::Io {
+                                      cause: e,
+                                      description: format!("Failed to read patch file '{}'",
+                                                           patch_filename),
+                                  }
+                              }));
 
             buf
         };
@@ -63,20 +62,20 @@ impl Patch {
 
             if patch.len() < 3 {
                 return Err(Error::InvalidPatch {
-                    description: format!("Expecting record 'offset' field, got {} of 3 bytes \
+                               description: format!("Expecting record 'offset' field, got {} of 3 bytes \
                                           before reaching end of file",
-                                         patch.len()),
-                });
+                                                    patch.len()),
+                           });
             }
             let offset = ((patch[0] as u32) << 16) + ((patch[1] as u32) << 8) + (patch[2] as u32);
             patch = &patch[3..];
 
             if patch.len() < 2 {
                 return Err(Error::InvalidPatch {
-                    description: format!("Expecting record 'size' field, got {} of 2 bytes before \
+                               description: format!("Expecting record 'size' field, got {} of 2 bytes before \
                                           reaching end of file",
-                                         patch.len()),
-                });
+                                                    patch.len()),
+                           });
             }
             let size = ((patch[0] as u16) << 8) + (patch[1] as u16);
             patch = &patch[2..];
@@ -140,10 +139,17 @@ impl Patch {
     {
         for rec in records {
             match rec {
-                Record::Normal { ref offset, ref data } => {
+                Record::Normal {
+                    ref offset,
+                    ref data,
+                } => {
                     println!("DATA : {:x}, {:x}", offset, data.len());
                 }
-                Record::RuntimeLengthEncoded { ref offset, ref size, ref value } => {
+                Record::RuntimeLengthEncoded {
+                    ref offset,
+                    ref size,
+                    ref value,
+                } => {
                     println!("RLE  : {:x}, {:x}, {:x}", offset, size, value);
                 }
             }
@@ -154,27 +160,46 @@ impl Patch {
         let mut obuf = ibuf.clone();
         for rec in self.records.iter() {
             match *rec {
-                Record::Normal { ref offset, ref data } => {
+                Record::Normal {
+                    ref offset,
+                    ref data,
+                } => {
+                    // Special case: extend existing ROM data.
+                    if obuf.len() == *offset {
+                        obuf.extend_from_slice(data);
+                        continue;
+                    }
                     if ibuf.len() < *offset + data.len() {
                         return Err(Error::InvalidPatch {
-                            description: format!("Normal record with offset {}, size {} is out of \
+                                       description: format!("Normal record with offset {}, size {} is out of \
                                                   bounds",
-                                                 offset,
-                                                 data.len()),
-                        });
+                                                            offset,
+                                                            data.len()),
+                                   });
                     }
                     for i in 0..data.len() {
                         obuf[*offset + i] = data[i];
                     }
                 }
-                Record::RuntimeLengthEncoded { ref offset, ref size, ref value } => {
+                Record::RuntimeLengthEncoded {
+                    ref offset,
+                    ref size,
+                    ref value,
+                } => {
+                    // Special case: extend existing ROM data.
+                    if obuf.len() == *offset {
+                        for _i in 0..*size {
+                            obuf.push(*value);
+                        }
+                        continue;
+                    }
                     if ibuf.len() < offset + size {
                         return Err(Error::InvalidPatch {
-                            description: format!("RLE record with offset {}, size {} is out of \
+                                       description: format!("RLE record with offset {}, size {} is out of \
                                                   bounds",
-                                                 offset,
-                                                 size),
-                        });
+                                                            offset,
+                                                            size),
+                                   });
                     }
                     for i in *offset..(*offset + *size) {
                         obuf[i] = *value;
@@ -192,27 +217,30 @@ pub fn patch(patch_filename: &str) -> Result<(), Error> {
 
     let ibuf = {
         let mut x = Vec::new();
-        try!(std::io::stdin().read_to_end(&mut x).map_err(|e| {
-            Error::Io {
-                cause: e,
-                description: format!("Failed to read from stdin to end"),
-            }
-        }));
+        try!(std::io::stdin()
+                 .read_to_end(&mut x)
+                 .map_err(|e| {
+                              Error::Io {
+                                  cause: e,
+                                  description: format!("Failed to read from stdin to end"),
+                              }
+                          }));
         x
     };
 
     let obuf = try!(patch.apply(&ibuf));
 
-    try!(std::io::stdout().write_all(&obuf).map_err(|e| {
-        Error::Io {
-            cause: e,
-            description: format!("Failed to write to stdout"),
-        }
-    }));
+    try!(std::io::stdout()
+             .write_all(&obuf)
+             .map_err(|e| {
+                          Error::Io {
+                              cause: e,
+                              description: format!("Failed to write to stdout"),
+                          }
+                      }));
 
     Ok(())
 }
 
 #[cfg(test)]
-mod tests {
-}
+mod tests {}

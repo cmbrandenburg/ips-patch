@@ -20,10 +20,9 @@ struct Args {
 }
 
 fn main() {
-
     let args: Args = docopt::Docopt::new(USAGE)
-                         .and_then(|d| d.decode())
-                         .unwrap_or_else(|e| e.exit());
+        .and_then(|d| d.decode())
+        .unwrap_or_else(|e| e.exit());
 
     match ips::patch(&args.arg_patch) {
         Ok(_) => (),
