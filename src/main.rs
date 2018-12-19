@@ -1,5 +1,8 @@
 extern crate docopt;
-extern crate rustc_serialize;
+extern crate serde_derive;
+extern crate serde;
+
+use serde_derive::{Deserialize};
 
 mod error;
 mod ips;
@@ -14,14 +17,14 @@ Usage:
   ips-patch --help
 "#;
 
-#[derive(Debug, RustcDecodable)]
+#[derive(Debug, Deserialize)]
 struct Args {
     arg_patch: String,
 }
 
 fn main() {
     let args: Args = docopt::Docopt::new(USAGE)
-        .and_then(|d| d.decode())
+        .and_then(|d| d.deserialize())
         .unwrap_or_else(|e| e.exit());
 
     match ips::patch(&args.arg_patch) {
