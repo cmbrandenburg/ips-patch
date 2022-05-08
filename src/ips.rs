@@ -165,17 +165,8 @@ impl Patch {
                     ref data,
                 } => {
                     // Special case: extend existing ROM data.
-                    if obuf.len() == *offset {
-                        obuf.extend_from_slice(data);
-                        continue;
-                    }
-                    if ibuf.len() < *offset + data.len() {
-                        return Err(Error::InvalidPatch {
-                                       description: format!("Normal record with offset {}, size {} is out of \
-                                                  bounds",
-                                                            offset,
-                                                            data.len()),
-                                   });
+                    if obuf.len() < *offset + data.len() {
+                        obuf.resize(*offset + data.len(), 0)
                     }
                     for i in 0..data.len() {
                         obuf[*offset + i] = data[i];
@@ -187,19 +178,8 @@ impl Patch {
                     ref value,
                 } => {
                     // Special case: extend existing ROM data.
-                    if obuf.len() == *offset {
-                        for _i in 0..*size {
-                            obuf.push(*value);
-                        }
-                        continue;
-                    }
-                    if ibuf.len() < offset + size {
-                        return Err(Error::InvalidPatch {
-                                       description: format!("RLE record with offset {}, size {} is out of \
-                                                  bounds",
-                                                            offset,
-                                                            size),
-                                   });
+                    if obuf.len() < *offset + size {
+                        obuf.resize(*offset + size, 0)
                     }
                     for i in *offset..(*offset + *size) {
                         obuf[i] = *value;
