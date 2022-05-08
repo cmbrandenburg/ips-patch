@@ -4,5 +4,6 @@ version = "0.0.0"
 authors = ["Craig M. Brandenburg <c.m.brandenburg@gmail.com>"]
 
 [dependencies]
-docopt = "0.6"
-rustc-serialize = "0.3"
+docopt = "1"
+serde = "1.0.82"
+serde_derive = "1.0.82"
